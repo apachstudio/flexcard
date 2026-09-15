@@ -14,7 +14,7 @@ export const debitCardDetails = {
 
 export const checkingAccountDetails = {
   routingNumber: '9876543212834',
-  accountNumber: '003280893244',
+  accountNumber: '093809328912',
   type: 'Checking',
 };
 

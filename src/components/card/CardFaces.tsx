@@ -15,17 +15,15 @@ import { checkingAccountDetails, debitCardDetails } from '../../data/mockAccount
 import { showToast } from '../Toast';
 import { Shimmer } from './Shimmer';
 
+import ChevronDownIcon from '../../assets/icons/card/chevron-down.svg';
+import CopyIconSvg from '../../assets/icons/card/copy.svg';
+import CreditCardIcon from '../../assets/icons/card/credit-card.svg';
 import MastercardMark from '../../assets/icons/card/mastercard.svg';
 import { blockFlipBriefly } from './flipGuard';
 
-/** Two overlapping rounded squares — the copy glyph from the reference. */
-function CopyIcon({ color }: { color: string }) {
-  return (
-    <View style={styles.copyIcon}>
-      <View style={[styles.copyIconBack, { backgroundColor: color }]} />
-      <View style={[styles.copyIconFront, { backgroundColor: color }]} />
-    </View>
-  );
+/** The design system's copy glyph (icon-micro/Union.svg) — solid white. */
+function CopyIcon() {
+  return <CopyIconSvg width={11} height={12} />;
 }
 
 /**
@@ -113,7 +111,7 @@ function CopyableValue({
       <Shimmer fill={fill} delay={shimmerDelay}>
         <View style={rowStyle}>
           <Text style={[textStyle, styles.maskSource]}>{value}</Text>
-          <CopyIcon color="#FFFFFF" />
+          <CopyIcon />
         </View>
       </Shimmer>
       <CopyHitTarget value={value} toastMessage={toastMessage} onCopied={pulse} />
@@ -151,24 +149,9 @@ function ViewDetailsLink({ onPress }: { onPress?: () => void }) {
     <GestureDetector gesture={tap}>
       <Animated.View style={[styles.viewDetailsRow, style]}>
         <Text style={styles.viewDetailsLabel}>View full details</Text>
-        {/* The "›" glyph rotated 90° — points down, matching the sheet it
-            opens sliding up from the bottom. */}
-        <Text style={styles.viewDetailsChevron}>›</Text>
+        <ChevronDownIcon width={10} height={6} style={styles.viewDetailsChevron} />
       </Animated.View>
     </GestureDetector>
-  );
-}
-
-/**
- * A little card glyph — outline + inset stripe, both plain opaque shapes so
- * they survive being painted through Shimmer's alpha mask (a two-tone icon
- * wouldn't; the mask only cares about shape, not color).
- */
-function CardIcon() {
-  return (
-    <View style={styles.cardIcon}>
-      <View style={styles.cardIconStripe} />
-    </View>
   );
 }
 
@@ -191,7 +174,7 @@ function SeeCardDetailsCta(_props: { dark?: boolean }) {
         bandOpacity={0.5}
       >
         <View style={styles.ctaRow}>
-          <CardIcon />
+          <CreditCardIcon width={16} height={16} />
           <Text style={styles.ctaLabel}>See card details</Text>
         </View>
       </Shimmer>
@@ -333,18 +316,6 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: 12.5,
     color: theme.colors.textOffWhite,
   },
-  cardIcon: {
-    width: 16,
-    height: 12,
-    borderRadius: 2.5,
-    borderWidth: 1.4,
-    borderColor: '#FFFFFF',
-  },
-  cardIconStripe: {
-    height: 3,
-    marginTop: 2.5,
-    backgroundColor: '#FFFFFF',
-  },
   face: {
     flex: 1,
     justifyContent: 'space-between',
@@ -416,33 +387,12 @@ const styles = StyleSheet.create((theme) => ({
   mastercardMark: {
     marginTop: 2,
   },
-  copyIcon: {
-    width: 10,
-    height: 10,
-  },
   copyHit: {
     position: 'absolute',
     right: -8,
     top: -8,
     bottom: -8,
     width: 34,
-  },
-  copyIconBack: {
-    position: 'absolute',
-    right: 0,
-    top: 0,
-    width: 7,
-    height: 7,
-    borderRadius: 2,
-    opacity: 0.55,
-  },
-  copyIconFront: {
-    position: 'absolute',
-    left: 0,
-    bottom: 0,
-    width: 7,
-    height: 7,
-    borderRadius: 2,
   },
   expCvcRow: {
     flexDirection: 'row',
@@ -503,11 +453,9 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.textOffWhite,
     opacity: 0.7,
   },
+  // Design system's chevron-down icon — already points down, no rotation
+  // needed (unlike the rotated "›" text glyph this replaced).
   viewDetailsChevron: {
-    fontSize: 14,
-    lineHeight: 16,
-    color: theme.colors.textOffWhite,
     opacity: 0.7,
-    transform: [{ rotate: '90deg' }],
   },
 }));
