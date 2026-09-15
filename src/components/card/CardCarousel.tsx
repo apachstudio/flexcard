@@ -54,6 +54,8 @@ const TAP_MAX_DISTANCE_PX = 6;
 
 type Props = {
   pager: CardPager;
+  /** "View full details" tap on a card's back face — opens CardDetailsSheet. */
+  onViewDetails?: (cardId: CardId) => void;
 };
 
 // The shader numbers and gradient colors (ported from the Figma "Moving
@@ -61,7 +63,7 @@ type Props = {
 // DEFAULT_SPECS for the Figma-matching per-card values.
 type CardKind = {
   Teaser: () => React.ReactElement;
-  Detail: () => React.ReactElement;
+  Detail: (props: { onViewDetails?: () => void }) => React.ReactElement;
 };
 
 const DEBIT_CARD: CardKind = {
@@ -146,6 +148,7 @@ function CarouselCard({
   rotation,
   tap,
   sheenTrigger,
+  onViewDetails,
 }: {
   width: number;
   active: boolean;
@@ -159,6 +162,7 @@ function CarouselCard({
   rotation: SharedValue<number>;
   tap: GestureType;
   sheenTrigger?: SharedValue<number>;
+  onViewDetails?: () => void;
 }) {
   const scale = useSharedValue(active ? 1 : 0.94);
   // Both cards share the same flip entrance (edge-on → reveal), so the
@@ -256,7 +260,7 @@ function CarouselCard({
               active={active}
               sheenTrigger={sheenTrigger}
             >
-              <Detail />
+              <Detail onViewDetails={onViewDetails} />
             </CardBackground>
           </Animated.View>
           </BorderBeam>
@@ -281,7 +285,7 @@ function PageDot({ active, onPress }: { active: boolean; onPress: () => void }) 
  * bill list also pages the cards). This component renders the cards for
  * whatever the pager says.
  */
-export function CardCarousel({ pager }: Props) {
+export function CardCarousel({ pager, onViewDetails }: Props) {
   const { specs } = useCardSpecs();
   const { page, onLayout, cardWidth, cardHeight, translateX, goToPage } = pager;
 
@@ -366,6 +370,7 @@ export function CardCarousel({ pager }: Props) {
                   rotation={c.rotation}
                   tap={c.tap}
                   sheenTrigger={sheenBurst}
+                  onViewDetails={() => onViewDetails?.(c.id)}
                 />
               ))}
             </Animated.View>

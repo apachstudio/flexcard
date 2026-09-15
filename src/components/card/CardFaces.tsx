@@ -11,10 +11,10 @@ import Animated, {
 } from 'react-native-reanimated';
 import { StyleSheet } from 'react-native-unistyles';
 
+import { checkingAccountDetails, debitCardDetails } from '../../data/mockAccounts';
 import { showToast } from '../Toast';
 import { Shimmer } from './Shimmer';
 
-import FaceIdIconOnDark from '../../assets/icons/card/face-id-on-dark.svg';
 import MastercardMark from '../../assets/icons/card/mastercard.svg';
 import { blockFlipBriefly } from './flipGuard';
 
@@ -122,16 +122,76 @@ function CopyableValue({
 }
 
 /**
+ * "View full details" link on the back face — opens CardDetailsSheet (owned
+ * by BillsScreen). Same UI-thread flip-guard as CopyHitTarget, so tapping it
+ * never also flips the card back to the front.
+ */
+function ViewDetailsLink({ onPress }: { onPress?: () => void }) {
+  const opacity = useSharedValue(1);
+
+  const tap = Gesture.Tap()
+    .maxDistance(12)
+    .hitSlop(8)
+    .onTouchesDown(() => {
+      blockFlipBriefly();
+      // A quick dip-and-recover — feedback that the tap landed, before the
+      // sheet itself finishes animating in.
+      opacity.value = withSequence(
+        withTiming(0.4, { duration: 80, easing: Easing.out(Easing.quad) }),
+        withTiming(1, { duration: 180, easing: Easing.out(Easing.quad) }),
+      );
+    })
+    .onEnd((_e, success) => {
+      if (success && onPress) runOnJS(onPress)();
+    });
+
+  const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
+
+  return (
+    <GestureDetector gesture={tap}>
+      <Animated.View style={[styles.viewDetailsRow, style]}>
+        <Text style={styles.viewDetailsLabel}>View full details</Text>
+        {/* The "›" glyph rotated 90° — points down, matching the sheet it
+            opens sliding up from the bottom. */}
+        <Text style={styles.viewDetailsChevron}>›</Text>
+      </Animated.View>
+    </GestureDetector>
+  );
+}
+
+/**
+ * A little card glyph — outline + inset stripe, both plain opaque shapes so
+ * they survive being painted through Shimmer's alpha mask (a two-tone icon
+ * wouldn't; the mask only cares about shape, not color).
+ */
+function CardIcon() {
+  return (
+    <View style={styles.cardIcon}>
+      <View style={styles.cardIconStripe} />
+    </View>
+  );
+}
+
+/**
  * Front-face teaser — no sensitive details, just a flip affordance, white on
  * both cards with a shimmer sweep (see Shimmer.tsx).
  */
 function SeeCardDetailsCta(_props: { dark?: boolean }) {
   return (
     <View style={styles.ctaMaskSlot}>
-      {/* Lower resting fill + a wide full-white band = a pronounced sweep. */}
-      <Shimmer fill="rgba(255,255,255,0.55)" bandWidth={130} pause={900}>
+      {/* Inverted shimmer: resting text is fully white (always legible, per
+          feedback), and a soft, slow dark band passes over it — the
+          opposite of the usual "bright highlight on dim text" sweep. */}
+      <Shimmer
+        fill="#FFFFFF"
+        bandWidth={130}
+        pause={1300}
+        duration={2200}
+        bandColorRGB="21,11,37"
+        bandOpacity={0.5}
+      >
         <View style={styles.ctaRow}>
-          <FaceIdIconOnDark width={20} height={20} />
+          <CardIcon />
           <Text style={styles.ctaLabel}>See card details</Text>
         </View>
       </Shimmer>
@@ -145,7 +205,7 @@ export function DebitCardTeaser() {
       <View style={styles.topRow}>
         <View style={styles.wordmarkGroup}>
           <Text style={styles.wordmarkOnDark}>flex</Text>
-          <Text style={styles.debitSubtitle}>Debit Card</Text>
+          <Text style={styles.debitSubtitle}>Virtual Card</Text>
         </View>
         <MastercardMark width={40} height={28} style={styles.mastercardMark} />
       </View>
@@ -168,21 +228,21 @@ export function CheckingAccountTeaser() {
   );
 }
 
-export function DebitCardFace() {
+export function DebitCardFace({ onViewDetails }: { onViewDetails?: () => void }) {
   return (
     <View style={styles.face}>
       <View style={styles.topRow}>
         <View style={styles.wordmarkGroup}>
           <Text style={styles.wordmarkOnDark}>flex</Text>
-          <Text style={styles.debitSubtitle}>Debit Card</Text>
+          <Text style={styles.debitSubtitle}>Virtual Card</Text>
         </View>
         <MastercardMark width={40} height={28} style={styles.mastercardMark} />
       </View>
       <View style={styles.debitDetails}>
         <CopyableValue
-          value="1234 5678 9012 1234"
+          value={debitCardDetails.number}
           toastMessage="Card details copied."
-          fill="rgba(221,198,249,0.8)"
+          fill="rgba(221,198,249,1)"
           shimmerDelay={400}
           textStyle={styles.mutedOnDarkLg}
           rowStyle={styles.cardNumberRow}
@@ -190,19 +250,20 @@ export function DebitCardFace() {
         <View style={styles.expCvcRow}>
           <View style={styles.expCvcItem}>
             <Text style={[styles.mutedOnDark, styles.opacity40]}>Exp</Text>
-            <Text style={styles.mutedOnDarkLg}>08/30</Text>
+            <Text style={styles.mutedOnDarkLg}>{debitCardDetails.expiration}</Text>
           </View>
           <View style={styles.expCvcItem}>
             <Text style={[styles.mutedOnDark, styles.opacity40]}>CVC</Text>
-            <Text style={styles.mutedOnDarkLg}>783</Text>
+            <Text style={styles.mutedOnDarkLg}>{debitCardDetails.cvc}</Text>
           </View>
         </View>
+        <ViewDetailsLink onPress={onViewDetails} />
       </View>
     </View>
   );
 }
 
-export function CheckingAccountCardFace() {
+export function CheckingAccountCardFace({ onViewDetails }: { onViewDetails?: () => void }) {
   return (
     <View style={styles.face}>
       <View style={styles.topRow}>
@@ -215,9 +276,9 @@ export function CheckingAccountCardFace() {
         <View style={styles.detailRow}>
           <Text style={styles.detailLabel}>Routing number</Text>
           <CopyableValue
-            value="9876543212834"
+            value={checkingAccountDetails.routingNumber}
             toastMessage="Bank details copied."
-            fill="rgba(230,217,249,0.9)"
+            fill="rgba(230,217,249,1)"
             shimmerDelay={400}
             textStyle={styles.detailValue}
             rowStyle={styles.detailValueRow}
@@ -227,15 +288,16 @@ export function CheckingAccountCardFace() {
         <View style={styles.detailRow}>
           <Text style={styles.detailLabel}>Account number</Text>
           <CopyableValue
-            value="003280893244"
+            value={checkingAccountDetails.accountNumber}
             toastMessage="Bank details copied."
-            fill="rgba(230,217,249,0.9)"
+            fill="rgba(230,217,249,1)"
             shimmerDelay={800}
             textStyle={styles.detailValue}
             rowStyle={styles.detailValueRow}
             align="center"
           />
         </View>
+        <ViewDetailsLink onPress={onViewDetails} />
       </View>
     </View>
   );
@@ -264,12 +326,24 @@ const styles = StyleSheet.create((theme) => ({
     // Optical nudge — the numbers sat high of the labels' middle.
     marginTop: 5,
   },
-  // "See card details" is white on BOTH cards, slightly smaller than body.
+  // "See card details" is white on BOTH cards — same size/weight as "View
+  // full details" (bodyMd, not bold) for a consistent footer/CTA voice.
   ctaLabel: {
-    ...theme.typography.bodyBold,
-    fontSize: 13.5,
-    lineHeight: 18,
+    ...theme.typography.bodyMd,
+    fontSize: 12.5,
     color: theme.colors.textOffWhite,
+  },
+  cardIcon: {
+    width: 16,
+    height: 12,
+    borderRadius: 2.5,
+    borderWidth: 1.4,
+    borderColor: '#FFFFFF',
+  },
+  cardIconStripe: {
+    height: 3,
+    marginTop: 2.5,
+    backgroundColor: '#FFFFFF',
   },
   face: {
     flex: 1,
@@ -316,7 +390,7 @@ const styles = StyleSheet.create((theme) => ({
     opacity: 0.55,
   },
   debitDetails: {
-    gap: theme.spacing.dense,
+    gap: theme.spacing.denser,
   },
   cardNumberRow: {
     flexDirection: 'row',
@@ -372,14 +446,14 @@ const styles = StyleSheet.create((theme) => ({
   },
   expCvcRow: {
     flexDirection: 'row',
-    gap: theme.spacing.loose,
+    gap: theme.spacing.dense,
   },
   expCvcItem: {
     flexDirection: 'row',
     gap: theme.spacing.denser,
   },
   checkingDetails: {
-    gap: theme.spacing.dense,
+    gap: theme.spacing.denser,
   },
   detailRow: {
     flexDirection: 'row',
@@ -408,5 +482,32 @@ const styles = StyleSheet.create((theme) => ({
     // Light lavender-white numbers on the checking card, per the reference.
     color: '#E6D9F9',
     opacity: 0.9,
+  },
+  // A dedicated footer row — full width, its own hairline, breathing room
+  // above — instead of a small link crowded against the numbers block.
+  viewDetailsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: theme.spacing.denser,
+    paddingTop: theme.spacing.denser,
+    borderTopWidth: 1,
+    // White-alpha hairline (not a fixed dark/light color) so it reads
+    // against both the dark debit and light checking video backgrounds,
+    // same trick as the white-on-both-cards text above it.
+    borderTopColor: 'rgba(255,255,255,0.18)',
+  },
+  viewDetailsLabel: {
+    ...theme.typography.bodyMd,
+    fontSize: 12.5,
+    color: theme.colors.textOffWhite,
+    opacity: 0.7,
+  },
+  viewDetailsChevron: {
+    fontSize: 14,
+    lineHeight: 16,
+    color: theme.colors.textOffWhite,
+    opacity: 0.7,
+    transform: [{ rotate: '90deg' }],
   },
 }));

@@ -83,6 +83,72 @@ export const mockBills: Bill[] = [
       { amount: '$72', label: 'Autopay on Jan 4', paid: false },
     ],
   },
+  // Placeholder billers (reusing existing logos — no unique art yet) added
+  // to stress-test "Pay with this card" at ~10 entries. Safe to delete once
+  // real assets/entries replace them, or once the scale question is settled.
+  {
+    id: 'spotify',
+    name: 'Spotify',
+    logo: require('../assets/images/billers/facts_education.png'),
+    paymentMethod: 'debit',
+    kind: 'single',
+    amount: '$12',
+    label: 'Due on Jan 18',
+  },
+  {
+    id: 'netflix',
+    name: 'Netflix',
+    logo: require('../assets/images/billers/geico_auto-insurance.png'),
+    paymentMethod: 'debit',
+    kind: 'single',
+    amount: '$18',
+    label: 'Due on Jan 22',
+  },
+  {
+    id: 'att',
+    name: 'AT&T',
+    logo: require('../assets/images/billers/t-mobile_telecom.png'),
+    paymentMethod: 'debit',
+    kind: 'single',
+    amount: '$64',
+    label: 'Due on Jan 9',
+  },
+  {
+    id: 'chase',
+    name: 'Chase',
+    logo: require('../assets/images/billers/yardi_hoa.png'),
+    paymentMethod: 'debit',
+    kind: 'single',
+    amount: '$210',
+    label: 'Due on Jan 28',
+  },
+  {
+    id: 'pge',
+    name: 'PG&E',
+    logo: require('../assets/images/billers/state-farm_auto-insurnace.png'),
+    paymentMethod: 'debit',
+    kind: 'single',
+    amount: '$140',
+    label: 'Due on Jan 12',
+  },
+  {
+    id: 'verizon',
+    name: 'Verizon',
+    logo: require('../assets/images/billers/facts_education.png'),
+    paymentMethod: 'debit',
+    kind: 'single',
+    amount: '$88',
+    label: 'Due on Jan 15',
+  },
+  {
+    id: 'planet-fitness',
+    name: 'Planet Fitness',
+    logo: require('../assets/images/billers/geico_auto-insurance.png'),
+    paymentMethod: 'debit',
+    kind: 'single',
+    amount: '$25',
+    label: 'Due on Jan 3',
+  },
 ];
 
 export function billsForPaymentMethod(method: PaymentMethod): Bill[] {

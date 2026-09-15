@@ -23,6 +23,12 @@ type Props = {
   delay?: number;
   /** Width of the sweeping highlight band, px. */
   bandWidth?: number;
+  /** Sweep band peak color as an "r,g,b" triplet. @default '255,255,255' (a
+   * brightening highlight). Pass a dark tone for the inverse — a shadow
+   * passing over an already-bright resting fill. */
+  bandColorRGB?: string;
+  /** Peak alpha of the sweep band (0-1). @default 1 */
+  bandOpacity?: number;
   children: React.ReactNode;
 };
 
@@ -37,6 +43,8 @@ export function Shimmer({
   duration = 1300,
   delay = 0,
   bandWidth = 90,
+  bandColorRGB = '255,255,255',
+  bandOpacity = 1,
   children,
 }: Props) {
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -80,7 +88,11 @@ export function Shimmer({
               <LinearGradient
                 start={vec(0, 0)}
                 end={vec(bandWidth, 0)}
-                colors={['rgba(255,255,255,0)', 'rgba(255,255,255,1)', 'rgba(255,255,255,0)']}
+                colors={[
+                  `rgba(${bandColorRGB},0)`,
+                  `rgba(${bandColorRGB},${bandOpacity})`,
+                  `rgba(${bandColorRGB},0)`,
+                ]}
               />
             </Rect>
           </Canvas>
