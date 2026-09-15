@@ -81,13 +81,11 @@ export function CardDetailsSheet({ visible, onClose, cardId, bills }: Props) {
           <Pressable onPress={onClose} hitSlop={8} style={styles.closeButton}>
             <CloseIcon width={28} height={33} />
           </Pressable>
-          {/* flex:1 + centered text, balanced by a same-width spacer on the
-              right, so the title centers on the PANEL, not just the gap
-              between the close button and the edge. */}
+          {/* Left-aligned next to the close button, per the design system
+              reference — not centered on the panel. */}
           <Text style={styles.title} numberOfLines={1}>
             {title}
           </Text>
-          <View style={styles.headerSpacer} />
         </View>
 
         <PayableBillersRow bills={bills} />
@@ -151,16 +149,10 @@ const styles = StyleSheet.create((theme) => ({
   },
   title: {
     ...theme.typography.headerSm,
-    flex: 1,
-    textAlign: 'center',
     color: theme.colors.textDefault,
   },
   closeButton: {
-    width: 28,
     marginLeft: -6,
-  },
-  headerSpacer: {
-    width: 28,
   },
   fields: {
     gap: theme.spacing.loose,
